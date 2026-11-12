@@ -1,3 +1,13 @@
 node_modules/
 coverage/
 *.db
+.forger/state.json
+.forger/work.log
+.forger/output/
+.forger/HALT
+.forger/runner.lock
+.forger/events.jsonl
+.forger/declined.json
+.forger/verdicts/
+.forger/tmp/
+.forger/checks.jsonl

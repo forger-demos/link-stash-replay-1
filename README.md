@@ -2,8 +2,8 @@
 
 Save links, tag them, search them and share a list read-only.
 
-A sample product built by the forger work loop: owner requests are GitHub issues
-labelled `ready-for-agent`, the loop builds each one on its own branch, and a PR
+A sample product built by the forger work loop. Owner requests are GitHub issues
+labelled `ready-for-agent`, and the loop builds each one on its own branch. A PR
 merges only when the gates in `.forger/workloop.config.json` and CI pass.
 
 ## Develop
