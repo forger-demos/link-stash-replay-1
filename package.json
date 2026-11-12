@@ -1,0 +1,16 @@
+{
+  "name": "link-stash",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test --coverage --coverage-reporter=lcov --coverage-reporter=text",
+    "check": "bun run typecheck && bun run test"
+  },
+  "devDependencies": {
+    "@types/bun": "1.1.14",
+    "playwright": "^1.64.1",
+    "typescript": "5.6.3"
+  }
+}
