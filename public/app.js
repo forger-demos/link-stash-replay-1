@@ -10,7 +10,9 @@ const filterEl = document.getElementById('filter');
 const filterLabel = document.getElementById('filter-label');
 const clearButton = document.getElementById('clear-filter');
 const emptyText = empty.textContent;
+const searchInput = document.getElementById('search');
 let activeTag = '';
+let activeText = '';
 
 function render(link) {
   const item = document.createElement('li');
@@ -37,19 +39,34 @@ function render(link) {
 
 function show(links) {
   list.replaceChildren(...links.map(render));
-  empty.textContent = activeTag ? `No links tagged ${activeTag}` : emptyText;
+  empty.textContent = activeText
+    ? `No links match ${activeText}`
+    : activeTag
+      ? `No links tagged ${activeTag}`
+      : emptyText;
   empty.hidden = links.length > 0;
   list.hidden = links.length === 0;
 }
+
+let latest = '';
 
 async function load(tag) {
   activeTag = tag;
   filterEl.hidden = !tag;
   filterLabel.textContent = tag ? `Showing links tagged ${tag}` : '';
-  const query = tag ? `?tag=${encodeURIComponent(tag)}` : '';
-  show((await (await fetch(`/api/links${query}`)).json()).links);
+  const params = new URLSearchParams();
+  if (tag) params.set('tag', tag);
+  if (activeText) params.set('q', activeText);
+  const query = params.size > 0 ? `?${params}` : '';
+  latest = query;
+  const links = (await (await fetch(`/api/links${query}`)).json()).links;
+  if (query === latest) show(links);
 }
 
+searchInput.addEventListener('input', () => {
+  activeText = searchInput.value.trim();
+  load(activeTag);
+});
 clearButton.addEventListener('click', () => load(''));
 await load('');
 
