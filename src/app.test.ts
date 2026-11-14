@@ -129,3 +129,38 @@ test('a refused duplicate stores nothing', async () => {
   expect(listLinks(db)[0]?.tags).toEqual(['x']);
   expect((db.query('SELECT count(*) AS n FROM link_tags').get() as {n: number}).n).toBe(1);
 });
+
+const searchFixture = async () => {
+  const db = openDatabase(':memory:');
+  await post(db, JSON.stringify({url: 'https://a.test', title: 'Rust Handbook', tags: 'books, rust'}));
+  await post(db, JSON.stringify({url: 'https://b.test', title: 'Cooking', tags: 'food, books'}));
+  await post(db, JSON.stringify({url: 'https://c.test', title: 'Gardening'}));
+  const urls = async (q: string) =>
+    ((await (await get(`/api/links${q}`, 'GET', db)).json()) as {links: {url: string}[]}).links.map((l) => l.url);
+  return urls;
+};
+
+test('a search matches a title whatever its case', async () => {
+  const urls = await searchFixture();
+  expect(await urls('?q=hAnDbOoK')).toEqual(['https://a.test']);
+  expect(await urls('?q=GARDEN')).toEqual(['https://c.test']);
+});
+
+test('a search matches a tag', async () => {
+  const urls = await searchFixture();
+  expect(await urls('?q=food')).toEqual(['https://b.test']);
+  expect(await urls('?q=BOOK')).toEqual(['https://b.test', 'https://a.test']);
+  expect(await urls('?q=nothing')).toEqual([]);
+});
+
+test('a search combined with a tag filter returns only links that satisfy both', async () => {
+  const urls = await searchFixture();
+  expect(await urls('?tag=books&q=cook')).toEqual(['https://b.test']);
+  expect(await urls('?tag=food&q=rust')).toEqual([]);
+});
+
+test('an empty search returns every link', async () => {
+  const urls = await searchFixture();
+  expect(await urls('?q=')).toHaveLength(3);
+  expect(await urls('?q=%20')).toHaveLength(3);
+});

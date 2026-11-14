@@ -22,8 +22,10 @@ export async function handle(req: Request, db: Database): Promise<Response> {
   if (req.method !== 'GET') return json({error: 'method not allowed'}, 405);
   if (pathname === '/api/health') return json(health());
   if (pathname === '/api/links') {
-    const tag = new URL(req.url).searchParams.get('tag')?.trim().toLowerCase();
-    return json({links: listLinks(db, tag || undefined)});
+    const params = new URL(req.url).searchParams;
+    const tag = params.get('tag')?.trim().toLowerCase();
+    const text = params.get('q')?.trim().toLowerCase();
+    return json({links: listLinks(db, tag || undefined, text || undefined)});
   }
   if (pathname.startsWith('/api/')) return json({error: 'not found'}, 404);
 

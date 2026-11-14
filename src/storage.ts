@@ -47,16 +47,18 @@ export function addLink(db: Database, url: string, title: string, tags: string[]
   })();
 }
 
-export function listLinks(db: Database, tag?: string): Link[] {
+export function listLinks(db: Database, tag?: string, text?: string): Link[] {
   const rows = db
     .query(
       `SELECT l.id, l.url, l.title, l.created_at,
          (SELECT group_concat(tag, ',') FROM (SELECT tag FROM link_tags WHERE link_id = l.id ORDER BY tag)) AS tags
        FROM links l
-       WHERE ?1 IS NULL OR EXISTS (SELECT 1 FROM link_tags t WHERE t.link_id = l.id AND t.tag = ?1)
+       WHERE (?1 IS NULL OR EXISTS (SELECT 1 FROM link_tags t WHERE t.link_id = l.id AND t.tag = ?1))
+         AND (?2 IS NULL OR instr(lower(l.title), ?2) > 0
+              OR EXISTS (SELECT 1 FROM link_tags t WHERE t.link_id = l.id AND instr(t.tag, ?2) > 0))
        ORDER BY l.id DESC`,
     )
-    .all(tag ?? null) as LinkRow[];
+    .all(tag ?? null, text ?? null) as LinkRow[];
   return rows.map(toLink);
 }
 
