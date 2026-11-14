@@ -16,6 +16,8 @@ merges only when the gates in `.forger/workloop.config.json` and CI pass.
 - `GET /api/links?tag=x` lists only the links with that tag.
 - `GET /api/links?q=text` lists only the links matching the search text, and it combines with `tag`.
 - Saving an address that is already stored is refused with status 409. The reply names the stored link by title and save date. Addresses that differ only in scheme or host case, a trailing slash or a fragment are the same. A refused address returns the field name and a message, and nothing is stored.
+- "Make a share address" on `/` creates a path with a long random token (`/s/<token>`) and shows it. The page there lists the links with their tags and search. It has no form and no control that changes anything. Making another share address stops the old one, and an unknown token answers 404.
+- `POST /api/share` makes a share address and `GET /api/share` returns the current one. Under `/s/`, `GET <share>/links` lists links (with `tag` and `q`), and every other method is refused with 405 and stores nothing.
 
 ## Develop
 

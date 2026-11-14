@@ -1,3 +1,5 @@
+import {renderLink} from '/list.js';
+
 const form = document.getElementById('save-form');
 const urlInput = document.getElementById('url');
 const titleInput = document.getElementById('title');
@@ -14,31 +16,8 @@ const searchInput = document.getElementById('search');
 let activeTag = '';
 let activeText = '';
 
-function render(link) {
-  const item = document.createElement('li');
-  const a = document.createElement('a');
-  a.href = link.url;
-  a.textContent = link.title || link.url;
-  a.rel = 'noopener noreferrer';
-  item.append(a);
-  if (link.tags.length > 0) {
-    const tags = document.createElement('span');
-    tags.className = 'tags';
-    for (const tag of link.tags) {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'tag';
-      chip.textContent = tag;
-      chip.addEventListener('click', () => load(tag));
-      tags.append(chip);
-    }
-    item.append(tags);
-  }
-  return item;
-}
-
 function show(links) {
-  list.replaceChildren(...links.map(render));
+  list.replaceChildren(...links.map((link) => renderLink(link, load)));
   empty.textContent = activeText
     ? `No links match ${activeText}`
     : activeTag
@@ -68,6 +47,25 @@ searchInput.addEventListener('input', () => {
   load(activeTag);
 });
 clearButton.addEventListener('click', () => load(''));
+
+const shareButton = document.getElementById('share');
+const shareAddress = document.getElementById('share-address');
+const showShare = (path) => {
+  shareAddress.hidden = !path;
+  if (!path) return;
+  const url = new URL(path, location.origin).href;
+  shareAddress.replaceChildren('Read-only address: ', Object.assign(document.createElement('a'), {href: url, textContent: url}));
+  shareButton.textContent = 'Make a new share address';
+};
+showShare((await (await fetch('/api/share')).json()).path);
+shareButton.addEventListener('click', async () => {
+  shareButton.disabled = true;
+  try {
+    showShare((await (await fetch('/api/share', {method: 'POST'})).json()).path);
+  } finally {
+    shareButton.disabled = false;
+  }
+});
 await load('');
 
 form.addEventListener('submit', async (event) => {

@@ -13,6 +13,10 @@ const migrations: readonly string[] = [
     tag TEXT NOT NULL,
     PRIMARY KEY (link_id, tag)
   )`,
+  `CREATE TABLE share (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    token TEXT NOT NULL
+  )`,
 ];
 
 export function migrate(db: Database): void {
@@ -65,4 +69,14 @@ export function listLinks(db: Database, tag?: string, text?: string): Link[] {
 export function findSavedLink(db: Database, url: string): Link | undefined {
   const key = sameAddressKey(url);
   return listLinks(db).find((l) => sameAddressKey(l.url) === key);
+}
+
+export function currentShareToken(db: Database): string | undefined {
+  return (db.query('SELECT token FROM share WHERE id = 1').get() as {token: string} | null)?.token;
+}
+
+export function makeShareToken(db: Database): string {
+  const token = Buffer.from(crypto.getRandomValues(new Uint8Array(32))).toString('base64url');
+  db.run('INSERT INTO share (id, token) VALUES (1, ?) ON CONFLICT (id) DO UPDATE SET token = excluded.token', [token]);
+  return token;
 }

@@ -42,7 +42,7 @@ test('a link saved with no title is listed by its address', async () => {
   const db = openDatabase(':memory:');
   await post(db, JSON.stringify({url: 'https://a.test'}));
   expect(await (await get('/api/links', 'GET', db)).text()).toContain('"title":""');
-  const html = await (await get('/app.js')).text();
+  const html = await (await get('/list.js')).text();
   expect(html).toContain('link.title || link.url');
 });
 
@@ -163,4 +163,60 @@ test('an empty search returns every link', async () => {
   const urls = await searchFixture();
   expect(await urls('?q=')).toHaveLength(3);
   expect(await urls('?q=%20')).toHaveLength(3);
+});
+
+const makeShare = async (db: Database) =>
+  ((await (await handle(new Request('http://test/api/share', {method: 'POST'}), db)).json()) as {path: string}).path;
+
+test('a share token gives the list through GET', async () => {
+  const db = openDatabase(':memory:');
+  await post(db, JSON.stringify({url: 'https://a.test', title: 'Rust Handbook', tags: 'books'}));
+  await post(db, JSON.stringify({url: 'https://b.test', title: 'Cooking'}));
+  const path = await makeShare(db);
+  expect(path).toMatch(/^\/s\/[A-Za-z0-9_-]{43}$/);
+  const page = await get(path, 'GET', db);
+  expect(page.status).toBe(200);
+  const html = await page.text();
+  expect(html).not.toContain('<form');
+  expect(page.headers.get('referrer-policy')).toBe('no-referrer');
+  const all = (await (await get(`${path}/links`, 'GET', db)).json()) as {links: {url: string}[]};
+  expect(all.links.map((l) => l.url)).toEqual(['https://b.test', 'https://a.test']);
+  const found = (await (await get(`${path}/links?q=rust&tag=books`, 'GET', db)).json()) as {links: {url: string}[]};
+  expect(found.links.map((l) => l.url)).toEqual(['https://a.test']);
+  expect((await get(`${path}/other`, 'GET', db)).status).toBe(404);
+});
+
+test('a POST under a share address is refused and stores nothing', async () => {
+  const db = openDatabase(':memory:');
+  const path = await makeShare(db);
+  const body = JSON.stringify({url: 'https://a.test'});
+  for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+    for (const target of [path, `${path}/links`, `${path}/api/links`]) {
+      const res = await handle(new Request(`http://test${target}`, {method, body}), db);
+      expect(res.status).toBe(405);
+    }
+  }
+  expect(countLinks(db)).toBe(0);
+  expect(await makeShare(db)).not.toBe(path);
+});
+
+test('an unknown share token answers 404', async () => {
+  const db = openDatabase(':memory:');
+  expect((await get('/s/nope', 'GET', db)).status).toBe(404);
+  expect((await get('/s/nope/links', 'GET', db)).status).toBe(404);
+  expect((await get('/s/', 'GET', db)).status).toBe(404);
+  await makeShare(db);
+  expect((await get('/s/nope', 'GET', db)).status).toBe(404);
+});
+
+test('making a new share address stops the old one', async () => {
+  const db = openDatabase(':memory:');
+  expect(await (await get('/api/share', 'GET', db)).json()).toEqual({path: null});
+  const first = await makeShare(db);
+  expect(await (await get('/api/share', 'GET', db)).json()).toEqual({path: first});
+  const second = await makeShare(db);
+  expect(second).not.toBe(first);
+  expect((await get(first, 'GET', db)).status).toBe(404);
+  expect((await get(`${first}/links`, 'GET', db)).status).toBe(404);
+  expect((await get(second, 'GET', db)).status).toBe(200);
 });

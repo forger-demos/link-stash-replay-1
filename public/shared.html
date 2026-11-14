@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Shared links</title>
+  <link rel="stylesheet" href="/tokens.css">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main>
+    <h1>Shared links</h1>
+    <div class="search">
+      <label for="search">Search links</label>
+      <input id="search" name="q" type="search" autocomplete="off">
+    </div>
+    <p id="filter" class="filter" hidden>
+      <span id="filter-label"></span>
+      <button id="clear-filter" type="button">Clear filter</button>
+    </p>
+    <p id="empty" class="empty">Nothing saved here yet</p>
+    <ul id="links" hidden></ul>
+  </main>
+  <script src="/shared.js" type="module"></script>
+</body>
+</html>

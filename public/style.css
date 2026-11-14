@@ -34,3 +34,5 @@ a { color: var(--color-accent); }
 .filter { display: flex; align-items: center; gap: 0.5rem; }
 .search { display: grid; gap: 0.25rem; margin-bottom: 1rem; }
 .filter[hidden] { display: none; }
+.share { display: grid; gap: 0.5rem; justify-items: start; margin-bottom: 1.5rem; }
+.share p { margin: 0; overflow-wrap: anywhere; }
