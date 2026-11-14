@@ -12,11 +12,14 @@ export async function handle(req: Request, db: Database): Promise<Response> {
   if (pathname === '/api/links' && req.method === 'POST') {
     const parsed = parseNewLink(await req.json().catch(() => null));
     if (!parsed.ok) return json({field: 'url', error: parsed.error}, 400);
-    return json(addLink(db, parsed.link.url, parsed.link.title), 201);
+    return json(addLink(db, parsed.link.url, parsed.link.title, parsed.link.tags), 201);
   }
   if (req.method !== 'GET') return json({error: 'method not allowed'}, 405);
   if (pathname === '/api/health') return json(health());
-  if (pathname === '/api/links') return json({links: listLinks(db)});
+  if (pathname === '/api/links') {
+    const tag = new URL(req.url).searchParams.get('tag')?.trim().toLowerCase();
+    return json({links: listLinks(db, tag || undefined)});
+  }
   if (pathname.startsWith('/api/')) return json({error: 'not found'}, 404);
 
   const name = pathname === '/' ? 'index.html' : pathname.slice(1);
