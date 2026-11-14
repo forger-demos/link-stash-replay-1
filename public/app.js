@@ -88,3 +88,34 @@ form.addEventListener('submit', async (event) => {
     button.disabled = false;
   }
 });
+
+const importInput = document.getElementById('import-file');
+const importResult = document.getElementById('import-result');
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+importInput.addEventListener('change', async () => {
+  const file = importInput.files[0];
+  if (!file) return;
+  importInput.disabled = true;
+  importResult.hidden = true;
+  importResult.classList.remove('error');
+  try {
+    const res = await fetch('/api/import', {method: 'POST', body: await file.text()});
+    const body = await res.json();
+    if (!res.ok) {
+      importResult.textContent = body.error;
+      importResult.classList.add('error');
+    } else {
+      const {duplicate, invalidAddress} = body.skipped;
+      const reasons = [];
+      if (duplicate) reasons.push(`${plural(duplicate, 'was', 'were')} already saved`);
+      if (invalidAddress) reasons.push(`${plural(invalidAddress, 'address was', 'addresses were')} not http or https`);
+      const skipped = duplicate + invalidAddress;
+      importResult.textContent = `${body.added} added, ${skipped} skipped${reasons.length ? `: ${reasons.join(', ')}` : ''}`;
+      await load(activeTag);
+    }
+    importResult.hidden = false;
+  } finally {
+    importInput.value = '';
+    importInput.disabled = false;
+  }
+});

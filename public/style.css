@@ -36,3 +36,5 @@ a { color: var(--color-accent); }
 .filter[hidden] { display: none; }
 .share { display: grid; gap: 0.5rem; justify-items: start; margin-bottom: 1.5rem; }
 .share p { margin: 0; overflow-wrap: anywhere; }
+.import { display: grid; gap: 0.5rem; margin-bottom: 1.5rem; }
+.import p { margin: 0; }
