@@ -18,6 +18,10 @@ merges only when the gates in `.forger/workloop.config.json` and CI pass.
 - Saving an address that is already stored is refused with status 409. The reply names the stored link by title and save date. Addresses that differ only in scheme or host case, a trailing slash or a fragment are the same. A refused address returns the field name and a message, and nothing is stored.
 - "Make a share address" on `/` creates a path with a long random token (`/s/<token>`) and shows it. The page there lists the links with their tags and search. It has no form and no control that changes anything. Making another share address stops the old one, and an unknown token answers 404.
 - `POST /api/share` makes a share address and `GET /api/share` returns the current one. Under `/s/`, `GET <share>/links` lists links (with `tag` and `q`), and every other method is refused with 405 and stores nothing.
+- "Import bookmarks file" on `/` takes the HTML file browsers export. Each bookmark becomes a link with its title. The folder names above it become its tags.
+- An import skips a bookmark already saved, repeats inside the file included. It also skips one whose address is not http or https. The result reads "<n> added, <n> skipped" with the reason for each kind.
+- A file that is not a bookmarks file is refused with "This is not a bookmarks file". Nothing is stored.
+- `POST /api/import` takes the file text as its body. It returns the counts added and skipped, or 400 for a file that is not a bookmarks file.
 
 ## Develop
 

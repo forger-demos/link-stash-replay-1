@@ -1,6 +1,8 @@
 import type {Database} from 'bun:sqlite';
 import {health} from './health';
 import {addLink, currentShareToken, findSavedLink, listLinks, makeShareToken, type Link} from './storage';
+import {parseBookmarks} from './bookmarks';
+import {importBookmarks} from './import';
 import {parseNewLink} from './validate';
 
 const publicDir = new URL('../public/', import.meta.url);
@@ -39,7 +41,11 @@ export async function handle(req: Request, db: Database): Promise<Response> {
     if (saved) return json({field: 'url', error: duplicateMessage(saved), link: saved}, 409);
     return json(addLink(db, parsed.link.url, parsed.link.title, parsed.link.tags), 201);
   }
-  if (pathname === '/api/share' && req.method === 'POST') return json({path: sharePath(makeShareToken(db))}, 201);
+  if (pathname === '/api/import' && req.method === 'POST') {
+    const bookmarks = parseBookmarks(await req.text());
+    if (!bookmarks) return json({error: 'This is not a bookmarks file'}, 400);
+    return json(importBookmarks(db, bookmarks), 201);
+  }
   if (pathname === '/api/share' && req.method === 'POST') return json({path: sharePath(makeShareToken(db))}, 201);
   if (req.method !== 'GET') return json({error: 'method not allowed'}, 405);
   if (pathname === '/api/health') return json(health());
