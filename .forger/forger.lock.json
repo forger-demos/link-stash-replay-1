@@ -2,7 +2,7 @@
   "packs": [
     {
       "id": "base",
-      "version": "1.7.0",
+      "version": "1.8.0",
       "files": [
         {
           "path": ".forger/backlog.json",
@@ -10,7 +10,7 @@
         },
         {
           "path": ".forger/hooks.json",
-          "sha256": "c0e780d9a86064bcff3d239d7da22d6fde5a33db20f627582d3757b45c1706c5"
+          "sha256": "bb396a787d97152ac367c90b78012d03fbffd54df282dd8f7e4bef9c817a95bb"
         },
         {
           "path": ".forger/process.md",
@@ -52,7 +52,7 @@
     },
     {
       "id": "testing",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "files": [
         {
           "path": ".forger/budgets.json",
@@ -60,7 +60,7 @@
         },
         {
           "path": ".forger/opinions/testing.md",
-          "sha256": "e69f0e4a8e08106b50b972fe58951f315429811c80c614b94b8ebe80b593a0f7"
+          "sha256": "cceb8a0ff426594a1f09b87a45d566abe047caf3fb368fbb4fc15ac52d2086ea"
         },
         {
           "path": ".forger/testing.json",
