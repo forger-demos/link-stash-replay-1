@@ -6,6 +6,12 @@ A sample product built by the forger work loop. Owner requests are GitHub issues
 labelled `ready-for-agent`, and the loop builds each one on its own branch. A PR
 merges only when the gates in `.forger/workloop.config.json` and CI pass.
 
+## What it does
+
+- Save a link from the form on `/`: an address (http or https only) and an optional title.
+- The list shows saved links newest first; a link with no title is listed by its address.
+- `POST /api/links` saves a link; `GET /api/links` lists them. A refused address returns the field name and a message, and nothing is stored.
+
 ## Develop
 
 ```
