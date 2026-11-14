@@ -92,3 +92,40 @@ test('a link saved before tags existed is listed with no tags', () => {
   migrate(db);
   expect(listLinks(db).map((l) => [l.url, l.tags])).toEqual([['https://old.test', []]]);
 });
+
+const countLinks = (db: Database) => listLinks(db).length;
+
+test('saving the same address twice is refused with status 409 and the stored link', async () => {
+  const db = openDatabase(':memory:');
+  await post(db, JSON.stringify({url: 'https://a.test/x', title: 'First'}));
+  const res = await post(db, JSON.stringify({url: 'https://a.test/x', title: 'Second'}));
+  expect(res.status).toBe(409);
+  const body = (await res.json()) as {error: string; link: {title: string; url: string}};
+  expect(body.link.title).toBe('First');
+  expect(body.error).toMatch(/^Already saved: First, on \d{4}-\d{2}-\d{2}$/);
+});
+
+test('addresses that differ only in host case, a trailing slash or a fragment count as the same', async () => {
+  const db = openDatabase(':memory:');
+  await post(db, JSON.stringify({url: 'https://a.test/x'}));
+  for (const url of ['https://A.TEST/x', 'https://a.test/x/', 'https://a.test/x#frag']) {
+    expect((await post(db, JSON.stringify({url}))).status).toBe(409);
+  }
+});
+
+test('addresses that differ in their path or query are both saved', async () => {
+  const db = openDatabase(':memory:');
+  for (const url of ['https://a.test/x', 'https://a.test/y', 'https://a.test/x?q=1']) {
+    expect((await post(db, JSON.stringify({url}))).status).toBe(201);
+  }
+  expect(countLinks(db)).toBe(3);
+});
+
+test('a refused duplicate stores nothing', async () => {
+  const db = openDatabase(':memory:');
+  await post(db, JSON.stringify({url: 'https://a.test', tags: 'x'}));
+  await post(db, JSON.stringify({url: 'https://a.test/', tags: 'y'}));
+  expect(countLinks(db)).toBe(1);
+  expect(listLinks(db)[0]?.tags).toEqual(['x']);
+  expect((db.query('SELECT count(*) AS n FROM link_tags').get() as {n: number}).n).toBe(1);
+});

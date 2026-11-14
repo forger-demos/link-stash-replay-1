@@ -1,4 +1,5 @@
 import {Database} from 'bun:sqlite';
+import {sameAddressKey} from './same-address';
 
 const migrations: readonly string[] = [
   `CREATE TABLE links (
@@ -57,4 +58,9 @@ export function listLinks(db: Database, tag?: string): Link[] {
     )
     .all(tag ?? null) as LinkRow[];
   return rows.map(toLink);
+}
+
+export function findSavedLink(db: Database, url: string): Link | undefined {
+  const key = sameAddressKey(url);
+  return listLinks(db).find((l) => sameAddressKey(l.url) === key);
 }
